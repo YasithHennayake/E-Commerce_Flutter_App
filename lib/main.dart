@@ -6,6 +6,9 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'features/auth/presentation/cubit/auth_cubit.dart';
 import 'features/auth/presentation/cubit/auth_state.dart';
 import 'features/auth/presentation/pages/login_page.dart';
+import 'features/products/domain/entities/product.dart';
+import 'features/products/presentation/pages/product_detail_page.dart';
+import 'features/products/presentation/pages/product_list_page.dart';
 import 'injection_container.dart';
 
 Future<void> main() async {
@@ -20,6 +23,17 @@ final _router = GoRouter(
   routes: [
     GoRoute(path: '/', builder: (context, state) => const _AuthGate()),
     GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
+    GoRoute(
+      path: '/products/:id',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        final extra = state.extra;
+        return ProductDetailPage(
+          productId: id,
+          initialProduct: extra is Product ? extra : null,
+        );
+      },
+    ),
   ],
 );
 
@@ -70,7 +84,7 @@ class _AuthGate extends StatelessWidget {
               body: Center(child: CircularProgressIndicator()),
             );
           case AuthStatus.authenticated:
-            return const _PlaceholderHome();
+            return const _AuthenticatedHome();
           case AuthStatus.unauthenticated:
           case AuthStatus.loading:
           case AuthStatus.failure:
@@ -81,27 +95,35 @@ class _AuthGate extends StatelessWidget {
   }
 }
 
-class _PlaceholderHome extends StatelessWidget {
-  const _PlaceholderHome();
+class _AuthenticatedHome extends StatelessWidget {
+  const _AuthenticatedHome();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('E-Commerce')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Authenticated. Features land in later phases.'),
-            const SizedBox(height: 24),
-            OutlinedButton.icon(
-              onPressed: () => context.read<AuthCubit>().logout(),
-              icon: const Icon(Icons.logout),
-              label: const Text('Log out'),
-            ),
-          ],
+      drawer: Drawer(
+        child: SafeArea(
+          child: ListView(
+            children: [
+              const DrawerHeader(
+                child: Align(
+                  alignment: Alignment.bottomLeft,
+                  child: Text('E-Commerce'),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.logout),
+                title: const Text('Log out'),
+                onTap: () {
+                  context.read<AuthCubit>().logout();
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
         ),
       ),
+      body: const ProductListPage(),
     );
   }
 }

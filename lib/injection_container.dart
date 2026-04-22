@@ -10,6 +10,14 @@ import 'features/auth/domain/usecases/get_cached_token.dart';
 import 'features/auth/domain/usecases/login.dart';
 import 'features/auth/domain/usecases/logout.dart';
 import 'features/auth/presentation/cubit/auth_cubit.dart';
+import 'features/products/data/datasources/product_remote_data_source.dart';
+import 'features/products/data/repositories/product_repository_impl.dart';
+import 'features/products/domain/repositories/product_repository.dart';
+import 'features/products/domain/usecases/get_categories.dart';
+import 'features/products/domain/usecases/get_product_by_id.dart';
+import 'features/products/domain/usecases/get_products.dart';
+import 'features/products/presentation/bloc/product_bloc.dart';
+import 'features/products/presentation/cubit/product_detail_cubit.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -20,33 +28,45 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<DioClient>(() => DioClient.create(sl()));
 
   _registerAuth();
+  _registerProducts();
 }
 
 void _registerAuth() {
-  // Data sources
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(sl()),
   );
   sl.registerLazySingleton<AuthLocalDataSource>(
     () => AuthLocalDataSourceImpl(sl()),
   );
-
-  // Repository
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(remote: sl(), local: sl()),
   );
-
-  // Use cases
   sl.registerLazySingleton(() => Login(sl()));
   sl.registerLazySingleton(() => Logout(sl()));
   sl.registerLazySingleton(() => GetCachedToken(sl()));
-
-  // Cubit (factory: BlocProvider will close it on dispose)
   sl.registerFactory(
     () => AuthCubit(
       loginUseCase: sl(),
       logoutUseCase: sl(),
       getCachedTokenUseCase: sl(),
     ),
+  );
+}
+
+void _registerProducts() {
+  sl.registerLazySingleton<ProductRemoteDataSource>(
+    () => ProductRemoteDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<ProductRepository>(
+    () => ProductRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton(() => GetProducts(sl()));
+  sl.registerLazySingleton(() => GetProductById(sl()));
+  sl.registerLazySingleton(() => GetCategories(sl()));
+  sl.registerFactory(
+    () => ProductBloc(getProducts: sl(), getCategories: sl()),
+  );
+  sl.registerFactory(
+    () => ProductDetailCubit(getProductById: sl(), getProducts: sl()),
   );
 }
