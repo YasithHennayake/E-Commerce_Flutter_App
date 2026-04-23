@@ -14,13 +14,18 @@ import 'features/cart/presentation/pages/cart_page.dart';
 import 'features/products/domain/entities/product.dart';
 import 'features/products/presentation/pages/product_detail_page.dart';
 import 'features/products/presentation/pages/product_list_page.dart';
+import 'features/wishlist/data/models/wishlist_item_model.dart';
+import 'features/wishlist/presentation/cubit/wishlist_cubit.dart';
+import 'features/wishlist/presentation/pages/wishlist_page.dart';
 import 'injection_container.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   Hive.registerAdapter(CartItemAdapter());
+  Hive.registerAdapter(WishlistItemAdapter());
   await Hive.openBox<CartItemModel>(StorageKeys.cartBox);
+  await Hive.openBox<WishlistItemModel>(StorageKeys.wishlistBox);
   await initDependencies();
   runApp(const ECommerceApp());
 }
@@ -31,6 +36,10 @@ final _router = GoRouter(
     GoRoute(path: '/', builder: (context, state) => const _AuthGate()),
     GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
     GoRoute(path: '/cart', builder: (context, state) => const CartPage()),
+    GoRoute(
+      path: '/wishlist',
+      builder: (context, state) => const WishlistPage(),
+    ),
     GoRoute(
       path: '/products/:id',
       builder: (context, state) {
@@ -54,6 +63,7 @@ class ECommerceApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => sl<AuthCubit>()..checkAuth()),
         BlocProvider(create: (_) => sl<CartBloc>()..add(const LoadCart())),
+        BlocProvider(create: (_) => sl<WishlistCubit>()..load()),
       ],
       child: MaterialApp.router(
         title: 'E-Commerce',
@@ -128,6 +138,14 @@ class _AuthenticatedHome extends StatelessWidget {
                 onTap: () {
                   Navigator.of(context).pop();
                   context.push('/cart');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.favorite_border),
+                title: const Text('Wishlist'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.push('/wishlist');
                 },
               ),
               ListTile(

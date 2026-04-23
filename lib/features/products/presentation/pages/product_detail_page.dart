@@ -6,6 +6,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../features/cart/domain/entities/cart_item.dart';
 import '../../../../features/cart/presentation/bloc/cart_bloc.dart';
 import '../../../../features/cart/presentation/bloc/cart_event.dart';
+import '../../../../features/wishlist/domain/entities/wishlist_item.dart';
+import '../../../../features/wishlist/presentation/cubit/wishlist_cubit.dart';
+import '../../../../features/wishlist/presentation/cubit/wishlist_state.dart';
 import '../../../../injection_container.dart';
 import '../../domain/entities/product.dart';
 import '../cubit/product_detail_cubit.dart';
@@ -35,12 +38,15 @@ class _DetailView extends StatelessWidget {
   final Product? fallback;
   const _DetailView({this.fallback});
 
-  void _notifyComingSoon(BuildContext context, String feature) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text('$feature will be wired in a later phase.')),
-      );
+  void _toggleWishlist(BuildContext context, Product product) {
+    context.read<WishlistCubit>().toggle(
+          WishlistItem(
+            productId: product.id,
+            title: product.title,
+            price: product.price,
+            image: product.image,
+          ),
+        );
   }
 
   void _addToCart(BuildContext context, Product product) {
@@ -163,14 +169,33 @@ class _DetailView extends StatelessWidget {
                       Row(
                         children: [
                           Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () =>
-                                  _notifyComingSoon(context, 'Wishlist'),
-                              icon: const Icon(Icons.favorite_border),
-                              label: const Text('Wishlist'),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                              ),
+                            child: BlocBuilder<WishlistCubit, WishlistState>(
+                              buildWhen: (p, c) =>
+                                  p.contains(product.id) !=
+                                  c.contains(product.id),
+                              builder: (context, state) {
+                                final isWishlisted = state.contains(product.id);
+                                return OutlinedButton.icon(
+                                  onPressed: () =>
+                                      _toggleWishlist(context, product),
+                                  icon: Icon(
+                                    isWishlisted
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color: isWishlisted
+                                        ? Theme.of(context).colorScheme.primary
+                                        : null,
+                                  ),
+                                  label: Text(
+                                    isWishlisted ? 'Wishlisted' : 'Wishlist',
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                           ),
                           const SizedBox(width: 12),

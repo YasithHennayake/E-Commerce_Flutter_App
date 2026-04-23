@@ -30,6 +30,14 @@ import 'features/products/domain/usecases/get_product_by_id.dart';
 import 'features/products/domain/usecases/get_products.dart';
 import 'features/products/presentation/bloc/product_bloc.dart';
 import 'features/products/presentation/cubit/product_detail_cubit.dart';
+import 'features/wishlist/data/datasources/wishlist_local_data_source.dart';
+import 'features/wishlist/data/models/wishlist_item_model.dart';
+import 'features/wishlist/data/repositories/wishlist_repository_impl.dart';
+import 'features/wishlist/domain/repositories/wishlist_repository.dart';
+import 'features/wishlist/domain/usecases/add_to_wishlist.dart';
+import 'features/wishlist/domain/usecases/get_wishlist.dart';
+import 'features/wishlist/domain/usecases/remove_from_wishlist.dart';
+import 'features/wishlist/presentation/cubit/wishlist_cubit.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -42,6 +50,7 @@ Future<void> initDependencies() async {
   _registerAuth();
   _registerProducts();
   _registerCart();
+  _registerWishlist();
 }
 
 void _registerAuth() {
@@ -104,6 +113,26 @@ void _registerCart() {
       removeFromCartUseCase: sl(),
       updateQuantityUseCase: sl(),
       clearCartUseCase: sl(),
+    ),
+  );
+}
+
+void _registerWishlist() {
+  final box = Hive.box<WishlistItemModel>(StorageKeys.wishlistBox);
+  sl.registerLazySingleton<WishlistLocalDataSource>(
+    () => WishlistLocalDataSourceImpl(box),
+  );
+  sl.registerLazySingleton<WishlistRepository>(
+    () => WishlistRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton(() => GetWishlist(sl()));
+  sl.registerLazySingleton(() => AddToWishlist(sl()));
+  sl.registerLazySingleton(() => RemoveFromWishlist(sl()));
+  sl.registerFactory(
+    () => WishlistCubit(
+      getWishlistUseCase: sl(),
+      addToWishlistUseCase: sl(),
+      removeFromWishlistUseCase: sl(),
     ),
   );
 }
