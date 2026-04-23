@@ -1,6 +1,8 @@
 import 'package:get_it/get_it.dart';
+import 'package:hive/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'core/constants/storage_keys.dart';
 import 'core/network/dio_client.dart';
 import 'features/auth/data/datasources/auth_local_data_source.dart';
 import 'features/auth/data/datasources/auth_remote_data_source.dart';
@@ -10,6 +12,16 @@ import 'features/auth/domain/usecases/get_cached_token.dart';
 import 'features/auth/domain/usecases/login.dart';
 import 'features/auth/domain/usecases/logout.dart';
 import 'features/auth/presentation/cubit/auth_cubit.dart';
+import 'features/cart/data/datasources/cart_local_data_source.dart';
+import 'features/cart/data/models/cart_item_model.dart';
+import 'features/cart/data/repositories/cart_repository_impl.dart';
+import 'features/cart/domain/repositories/cart_repository.dart';
+import 'features/cart/domain/usecases/add_to_cart.dart';
+import 'features/cart/domain/usecases/clear_cart.dart';
+import 'features/cart/domain/usecases/get_cart.dart';
+import 'features/cart/domain/usecases/remove_from_cart.dart';
+import 'features/cart/domain/usecases/update_quantity.dart';
+import 'features/cart/presentation/bloc/cart_bloc.dart';
 import 'features/products/data/datasources/product_remote_data_source.dart';
 import 'features/products/data/repositories/product_repository_impl.dart';
 import 'features/products/domain/repositories/product_repository.dart';
@@ -29,6 +41,7 @@ Future<void> initDependencies() async {
 
   _registerAuth();
   _registerProducts();
+  _registerCart();
 }
 
 void _registerAuth() {
@@ -68,5 +81,29 @@ void _registerProducts() {
   );
   sl.registerFactory(
     () => ProductDetailCubit(getProductById: sl(), getProducts: sl()),
+  );
+}
+
+void _registerCart() {
+  final box = Hive.box<CartItemModel>(StorageKeys.cartBox);
+  sl.registerLazySingleton<CartLocalDataSource>(
+    () => CartLocalDataSourceImpl(box),
+  );
+  sl.registerLazySingleton<CartRepository>(
+    () => CartRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton(() => GetCart(sl()));
+  sl.registerLazySingleton(() => AddToCart(sl()));
+  sl.registerLazySingleton(() => RemoveFromCart(sl()));
+  sl.registerLazySingleton(() => UpdateQuantity(sl()));
+  sl.registerLazySingleton(() => ClearCart(sl()));
+  sl.registerFactory(
+    () => CartBloc(
+      getCartUseCase: sl(),
+      addToCartUseCase: sl(),
+      removeFromCartUseCase: sl(),
+      updateQuantityUseCase: sl(),
+      clearCartUseCase: sl(),
+    ),
   );
 }

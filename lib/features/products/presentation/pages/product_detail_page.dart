@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../features/cart/domain/entities/cart_item.dart';
+import '../../../../features/cart/presentation/bloc/cart_bloc.dart';
+import '../../../../features/cart/presentation/bloc/cart_event.dart';
 import '../../../../injection_container.dart';
 import '../../domain/entities/product.dart';
 import '../cubit/product_detail_cubit.dart';
@@ -37,6 +40,28 @@ class _DetailView extends StatelessWidget {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(content: Text('$feature will be wired in a later phase.')),
+      );
+  }
+
+  void _addToCart(BuildContext context, Product product) {
+    context.read<CartBloc>().add(
+          AddToCart(
+            CartItem(
+              productId: product.id,
+              title: product.title,
+              price: product.price,
+              image: product.image,
+              quantity: 1,
+            ),
+          ),
+        );
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('Added to cart'),
+          duration: Duration(seconds: 2),
+        ),
       );
   }
 
@@ -152,8 +177,7 @@ class _DetailView extends StatelessWidget {
                           Expanded(
                             flex: 2,
                             child: FilledButton.icon(
-                              onPressed: () =>
-                                  _notifyComingSoon(context, 'Add to cart'),
+                              onPressed: () => _addToCart(context, product),
                               icon: const Icon(Icons.shopping_cart_outlined),
                               label: const Text('Add to cart'),
                               style: FilledButton.styleFrom(
