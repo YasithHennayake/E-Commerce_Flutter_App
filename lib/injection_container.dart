@@ -22,6 +22,14 @@ import 'features/cart/domain/usecases/get_cart.dart';
 import 'features/cart/domain/usecases/remove_from_cart.dart';
 import 'features/cart/domain/usecases/update_quantity.dart';
 import 'features/cart/presentation/bloc/cart_bloc.dart';
+import 'features/orders/data/datasources/order_local_data_source.dart';
+import 'features/orders/data/datasources/order_remote_data_source.dart';
+import 'features/orders/data/repositories/order_repository_impl.dart';
+import 'features/orders/domain/repositories/order_repository.dart';
+import 'features/orders/domain/usecases/get_orders.dart';
+import 'features/orders/domain/usecases/place_order.dart';
+import 'features/orders/presentation/cubit/checkout_cubit.dart';
+import 'features/orders/presentation/cubit/orders_cubit.dart';
 import 'features/products/data/datasources/product_remote_data_source.dart';
 import 'features/products/data/repositories/product_repository_impl.dart';
 import 'features/products/domain/repositories/product_repository.dart';
@@ -51,6 +59,7 @@ Future<void> initDependencies() async {
   _registerProducts();
   _registerCart();
   _registerWishlist();
+  _registerOrders();
 }
 
 void _registerAuth() {
@@ -135,4 +144,21 @@ void _registerWishlist() {
       removeFromWishlistUseCase: sl(),
     ),
   );
+}
+
+void _registerOrders() {
+  final box = Hive.box<String>(StorageKeys.ordersBox);
+  sl.registerLazySingleton<OrderRemoteDataSource>(
+    () => OrderRemoteDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<OrderLocalDataSource>(
+    () => OrderLocalDataSourceImpl(box),
+  );
+  sl.registerLazySingleton<OrderRepository>(
+    () => OrderRepositoryImpl(remote: sl(), local: sl()),
+  );
+  sl.registerLazySingleton(() => PlaceOrder(sl()));
+  sl.registerLazySingleton(() => GetOrders(sl()));
+  sl.registerFactory(() => CheckoutCubit(placeOrderUseCase: sl()));
+  sl.registerFactory(() => OrdersCubit(getOrdersUseCase: sl()));
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:go_router/go_router.dart';
 
 import '../bloc/cart_bloc.dart';
 import '../bloc/cart_event.dart';
@@ -91,13 +92,7 @@ class CartPage extends StatelessWidget {
                 ),
                 CartSummary(
                   cart: state.cart,
-                  onCheckout: () {
-                    ScaffoldMessenger.of(context)
-                      ..hideCurrentSnackBar()
-                      ..showSnackBar(const SnackBar(
-                        content: Text('Checkout lands in Phase 7.'),
-                      ));
-                  },
+                  onCheckout: () => context.push('/checkout'),
                 ),
               ],
             );

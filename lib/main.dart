@@ -11,6 +11,10 @@ import 'features/cart/data/models/cart_item_model.dart';
 import 'features/cart/presentation/bloc/cart_bloc.dart';
 import 'features/cart/presentation/bloc/cart_event.dart';
 import 'features/cart/presentation/pages/cart_page.dart';
+import 'features/orders/presentation/cubit/orders_cubit.dart';
+import 'features/orders/presentation/pages/checkout_page.dart';
+import 'features/orders/presentation/pages/order_confirmation_page.dart';
+import 'features/orders/presentation/pages/orders_page.dart';
 import 'features/products/domain/entities/product.dart';
 import 'features/products/presentation/pages/product_detail_page.dart';
 import 'features/products/presentation/pages/product_list_page.dart';
@@ -26,6 +30,7 @@ Future<void> main() async {
   Hive.registerAdapter(WishlistItemAdapter());
   await Hive.openBox<CartItemModel>(StorageKeys.cartBox);
   await Hive.openBox<WishlistItemModel>(StorageKeys.wishlistBox);
+  await Hive.openBox<String>(StorageKeys.ordersBox);
   await initDependencies();
   runApp(const ECommerceApp());
 }
@@ -40,6 +45,18 @@ final _router = GoRouter(
       path: '/wishlist',
       builder: (context, state) => const WishlistPage(),
     ),
+    GoRoute(
+      path: '/checkout',
+      builder: (context, state) => const CheckoutPage(),
+    ),
+    GoRoute(
+      path: '/checkout/success',
+      builder: (context, state) {
+        final id = state.extra is String ? state.extra as String : '';
+        return OrderConfirmationPage(orderId: id);
+      },
+    ),
+    GoRoute(path: '/orders', builder: (context, state) => const OrdersPage()),
     GoRoute(
       path: '/products/:id',
       builder: (context, state) {
@@ -64,6 +81,7 @@ class ECommerceApp extends StatelessWidget {
         BlocProvider(create: (_) => sl<AuthCubit>()..checkAuth()),
         BlocProvider(create: (_) => sl<CartBloc>()..add(const LoadCart())),
         BlocProvider(create: (_) => sl<WishlistCubit>()..load()),
+        BlocProvider(create: (_) => sl<OrdersCubit>()..load()),
       ],
       child: MaterialApp.router(
         title: 'E-Commerce',
@@ -146,6 +164,14 @@ class _AuthenticatedHome extends StatelessWidget {
                 onTap: () {
                   Navigator.of(context).pop();
                   context.push('/wishlist');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.receipt_long_outlined),
+                title: const Text('My Orders'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.push('/orders');
                 },
               ),
               ListTile(
