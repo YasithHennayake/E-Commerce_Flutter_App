@@ -44,6 +44,13 @@ import 'features/wishlist/data/repositories/wishlist_repository_impl.dart';
 import 'features/wishlist/domain/repositories/wishlist_repository.dart';
 import 'features/wishlist/domain/usecases/add_to_wishlist.dart';
 import 'features/wishlist/domain/usecases/get_wishlist.dart';
+import 'features/profile/data/datasources/profile_local_data_source.dart';
+import 'features/profile/data/datasources/profile_remote_data_source.dart';
+import 'features/profile/data/repositories/profile_repository_impl.dart';
+import 'features/profile/domain/repositories/profile_repository.dart';
+import 'features/profile/domain/usecases/get_profile.dart';
+import 'features/profile/domain/usecases/update_profile.dart';
+import 'features/profile/presentation/cubit/profile_cubit.dart';
 import 'features/wishlist/domain/usecases/remove_from_wishlist.dart';
 import 'features/wishlist/presentation/cubit/wishlist_cubit.dart';
 
@@ -60,6 +67,7 @@ Future<void> initDependencies() async {
   _registerCart();
   _registerWishlist();
   _registerOrders();
+  _registerProfile();
 }
 
 void _registerAuth() {
@@ -161,4 +169,24 @@ void _registerOrders() {
   sl.registerLazySingleton(() => GetOrders(sl()));
   sl.registerFactory(() => CheckoutCubit(placeOrderUseCase: sl()));
   sl.registerFactory(() => OrdersCubit(getOrdersUseCase: sl()));
+}
+
+void _registerProfile() {
+  sl.registerLazySingleton<ProfileRemoteDataSource>(
+    () => ProfileRemoteDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<ProfileLocalDataSource>(
+    () => ProfileLocalDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<ProfileRepository>(
+    () => ProfileRepositoryImpl(remote: sl(), local: sl()),
+  );
+  sl.registerLazySingleton(() => GetProfile(sl()));
+  sl.registerLazySingleton(() => UpdateProfile(sl()));
+  sl.registerFactory(
+    () => ProfileCubit(
+      getProfileUseCase: sl(),
+      updateProfileUseCase: sl(),
+    ),
+  );
 }

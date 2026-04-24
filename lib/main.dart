@@ -18,6 +18,7 @@ import 'features/orders/presentation/pages/orders_page.dart';
 import 'features/products/domain/entities/product.dart';
 import 'features/products/presentation/pages/product_detail_page.dart';
 import 'features/products/presentation/pages/product_list_page.dart';
+import 'features/profile/presentation/pages/profile_page.dart';
 import 'features/wishlist/data/models/wishlist_item_model.dart';
 import 'features/wishlist/presentation/cubit/wishlist_cubit.dart';
 import 'features/wishlist/presentation/pages/wishlist_page.dart';
@@ -57,6 +58,10 @@ final _router = GoRouter(
       },
     ),
     GoRoute(path: '/orders', builder: (context, state) => const OrdersPage()),
+    GoRoute(
+      path: '/profile',
+      builder: (context, state) => const ProfilePage(),
+    ),
     GoRoute(
       path: '/products/:id',
       builder: (context, state) {
@@ -172,6 +177,14 @@ class _AuthenticatedHome extends StatelessWidget {
                 onTap: () {
                   Navigator.of(context).pop();
                   context.push('/orders');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.person_outline),
+                title: const Text('Profile'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.push('/profile');
                 },
               ),
               ListTile(

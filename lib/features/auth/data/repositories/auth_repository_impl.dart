@@ -21,6 +21,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final model = await remote.login(username: username, password: password);
       await local.cacheToken(model);
+      await local.cacheUsername(username);
       return Right(model);
     } catch (e) {
       return Left(failureFromException(e));

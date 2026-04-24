@@ -8,6 +8,9 @@ abstract class AuthLocalDataSource {
   Future<void> cacheToken(AuthTokenModel token);
   Future<AuthTokenModel?> getCachedToken();
   Future<void> clearToken();
+
+  Future<void> cacheUsername(String username);
+  Future<String?> getUsername();
 }
 
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
@@ -30,5 +33,19 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   @override
   Future<void> clearToken() async {
     await prefs.remove(StorageKeys.authToken);
+    await prefs.remove(StorageKeys.authUsername);
+  }
+
+  @override
+  Future<void> cacheUsername(String username) async {
+    final ok = await prefs.setString(StorageKeys.authUsername, username);
+    if (!ok) throw const CacheException('Failed to cache username.');
+  }
+
+  @override
+  Future<String?> getUsername() async {
+    final value = prefs.getString(StorageKeys.authUsername);
+    if (value == null || value.isEmpty) return null;
+    return value;
   }
 }
